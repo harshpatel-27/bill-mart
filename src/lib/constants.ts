@@ -1,7 +1,7 @@
 import { PackageIcon } from "lucide-react";
 
-export const SITE_NAME = "Neelkanth Store";
-export const SESSION_NAME = "neelkanth-stocks-session";
+export const SITE_NAME = "Bill Mart";
+export const SESSION_NAME = "bill-mart-session";
 export const adminNavLinks = [
   {
     name: "Products",

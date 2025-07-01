@@ -23,7 +23,7 @@ const AdminHeader = ({ initialTheme }: AdminHeaderComponentProps) => {
     <div className="h-14 bg-background flex items-center justify-between relative px-2 rounded-md mb-2 w-full">
       <SidebarTrigger className="z-[10]" />
       <div className="absolute inset-0 text-lg font-medium flex items-center justify-center truncate">
-        {currentPage?.name || "Neelkanth Store"}
+        {currentPage?.name || "Bill Mart"}
       </div>
       <ThemeToggler initialTheme={initialTheme} />
     </div>

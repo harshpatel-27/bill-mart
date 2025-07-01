@@ -10,8 +10,8 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
-  title: "Neelkanth Store",
-  description: "Neelkanth Store Tracker",
+  title: "Bill Mart",
+  description: "Inventory & Billing System for Small Shops",
   icons: "/favicon.jpg",
   manifest: "/manifest.json",
 };

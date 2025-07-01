@@ -1,7 +1,7 @@
 {
-  "name": "Neelkanth Store",
-  "short_name": "Neelkanth Store",
-  "description": "Neelkanth Store Tracker",
+  "name": "Bill Mart",
+  "short_name": "Bill Mart",
+  "description": "Inventory & Billing System for Small Shops",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#101010",
