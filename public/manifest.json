@@ -1,0 +1,22 @@
+{
+  "name": "Neelkanth Store",
+  "short_name": "Neelkanth Store",
+  "description": "Neelkanth Store Tracker",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#101010",
+  "theme_color": "#101010",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/favicon/android-chrome-192x192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "/favicon/android-chrome-512x512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ]
+}
