@@ -21,7 +21,6 @@ import {
 } from "@/components/ui/alert-dialog";
 // import { deleteEmployee } from "@/actions/employees";
 import { toast } from "sonner";
-import { deleteStockTransaction } from "@/actions";
 import Link from "next/link";
 
 export type StockReport = Models.Document;
@@ -283,16 +282,16 @@ const StockReportTableWrapper = ({ data }: { data: Models.Document[] }) => {
                           duration: Infinity,
                         },
                       );
-                      const deletedRecord = await deleteStockTransaction(
-                        row.original.$id,
-                      );
+                      // const deletedRecord = await deleteStockTransaction(
+                      //   row.original.$id,
+                      // );
                       toast.dismiss(loadingToast);
-                      if (deletedRecord && deletedRecord?.success) {
-                        toast.success("Record Deleted Successfully");
-                        handleDeleteStockRecord(row.original.$id);
-                      } else {
-                        toast.error("Failed to delete record");
-                      }
+                      // if (deletedRecord && deletedRecord?.success) {
+                      //   toast.success("Record Deleted Successfully");
+                      //   handleDeleteStockRecord(row.original.$id);
+                      // } else {
+                      //   toast.error("Failed to delete record");
+                      // }
                     }}
                     variant={"destructive"}
                   >
