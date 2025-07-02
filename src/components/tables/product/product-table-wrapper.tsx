@@ -48,6 +48,19 @@ const ProductsTableWrapper = () => {
   };
   const columns: ColumnDef<Product>[] = [
     {
+      accessorKey: "sno.",
+      header: () => {
+        return <Button variant="ghost">Sno.</Button>;
+      },
+      cell: ({ row }) => {
+        return (
+          <div className="flex items-center gap-4 w-full max-w-[100px] justify-center text-center">
+            <span className="w-full truncate ">{row.index + 1}</span>
+          </div>
+        );
+      },
+    },
+    {
       accessorKey: "name",
       header: ({ column }) => {
         return (
@@ -200,15 +213,15 @@ const ProductsTableWrapper = () => {
       cell: ({ row }) => {
         return (
           <div className="flex items-center justify-center gap-1">
+            <Button asChild size={"sm"} variant={"outline"}>
+              <Link href={`/products/${row.original.$id}`}>Edit</Link>
+            </Button>
             <Button
               size={"sm"}
               variant={"destructive"}
               onClick={() => handleDelete(row.original.$id)}
             >
               <TrashIcon />
-            </Button>
-            <Button asChild size={"sm"} variant={"outline"}>
-              <Link href={`/products/${row.original.$id}`}>Edit</Link>
             </Button>
           </div>
         );

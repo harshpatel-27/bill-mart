@@ -6,32 +6,33 @@ import { ColumnDef } from "@tanstack/react-table";
 import { ArrowDown, ArrowUp, TrashIcon } from "lucide-react";
 import { Models } from "node-appwrite";
 import Link from "next/link";
-import { CustomersTable } from "./customers-table";
+import { InvoicesTable } from "./invoices-table";
 import { useDataStore } from "@/stores/data.store";
 import { toast } from "sonner";
 import { useConfirm } from "@/hooks/use-confirm";
-import { deleteCustomer } from "@/actions";
+import { deleteInvoice } from "@/actions";
+import { format } from "date-fns";
 
-export type Customer = Models.Document;
+export type Invoice = Models.Document;
 
-const CustomersTableWrapper = ({
+const InvoicesTableWrapper = ({
   data,
 }: {
   data: Models.DocumentList<Models.Document>;
 }) => {
-  const setCustomers = useDataStore((state) => state.setCustomers);
-  const customers = useDataStore((state) => state.customers);
-  const removeCustomer = useDataStore((state) => state.removeCustomer);
+  const setInvoices = useDataStore((state) => state.setInvoices);
+  const invoices = useDataStore((state) => state.invoices);
+  const removeInvoice = useDataStore((state) => state.removeInvoice);
 
   useEffect(() => {
     if (data?.total > 0) {
-      setCustomers(data.documents);
+      setInvoices(data.documents);
     }
   }, [data]);
 
   const [ConfirmDialog, confirm] = useConfirm(
-    "Delete Customer",
-    "Are you sure? This Customer will be deleted permanently.",
+    "Delete Invoice",
+    "Are you sure? This invoice will be deleted permanently.",
     "destructive",
   );
 
@@ -39,25 +40,25 @@ const CustomersTableWrapper = ({
     const ok = await confirm();
     if (!ok) return;
     const loadingToast = toast.loading(
-      "Please wait while deleting the customer...",
+      "Please wait while deleting the invoice...",
     );
 
     try {
-      const response = await deleteCustomer(id);
+      const response = await deleteInvoice(id);
       toast.dismiss(loadingToast);
       if (response.success) {
-        removeCustomer(id);
-        toast.success("Customer deleted successfully");
+        removeInvoice(id);
+        toast.success("Invoice deleted successfully");
       } else {
-        toast.error("Failed to delete customer");
+        toast.error("Failed to delete invoice");
       }
     } catch (error) {
       console.log(error);
       toast.dismiss(loadingToast);
-      toast.error("Failed to delete customer");
+      toast.error("Failed to delete invoice");
     }
   };
-  const columns: ColumnDef<Customer>[] = [
+  const columns: ColumnDef<Invoice>[] = [
     {
       accessorKey: "sno.",
       header: () => {
@@ -71,15 +72,16 @@ const CustomersTableWrapper = ({
         );
       },
     },
+
     {
-      accessorKey: "name",
+      accessorKey: "customer.name",
       header: ({ column }) => {
         return (
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           >
-            Name
+            Customer name
             {column.getIsSorted() === "desc" ? (
               <ArrowUp className="ml-2 h-4 w-4" />
             ) : (
@@ -89,53 +91,29 @@ const CustomersTableWrapper = ({
         );
       },
       cell: ({ row }) => {
-        return (
-          <div className="flex items-center gap-4 w-max max-w-[300px]">
-            <span className="w-full truncate">{row.original.name}</span>
-          </div>
-        );
-      },
-    },
-    {
-      accessorKey: "phone",
-      header: ({ column }) => {
-        return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
-            Phone
-            {column.getIsSorted() === "desc" ? (
-              <ArrowUp className="ml-2 h-4 w-4" />
-            ) : (
-              <ArrowDown className="ml-2 h-4 w-4" />
-            )}
-          </Button>
-        );
-      },
-      cell: ({ row }) => {
-        const phone = row.original.phone;
         return (
           <div className="flex items-center justify-start gap-1">
             <Button
               className="flex items-center gap-4 w-max max-w-[300px]"
               variant={"ghost"}
             >
-              <span className="w-full truncate">{phone}</span>
+              <span className="w-full truncate">
+                {row.original?.customer?.name}
+              </span>
             </Button>
           </div>
         );
       },
     },
     {
-      accessorKey: "email",
+      accessorKey: "items",
       header: ({ column }) => {
         return (
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           >
-            Email
+            Total Items
             {column.getIsSorted() === "desc" ? (
               <ArrowUp className="ml-2 h-4 w-4" />
             ) : (
@@ -145,15 +123,95 @@ const CustomersTableWrapper = ({
         );
       },
       cell: ({ row }) => {
-        const email = row.original.email;
         return (
-          <div className="flex items-center justify-start gap-1">
+          <div className="flex items-center justify-center ">
             <Button
-              className="flex items-center gap-4 w-max max-w-[300px]"
+              className="flex items-center w-max max-w-[300px]"
               variant={"outline"}
             >
-              <span className="w-full truncate">{email}</span>
+              <span className="w-full truncate">
+                {row.original?.items?.length}
+              </span>
             </Button>
+          </div>
+        );
+      },
+    },
+    {
+      accessorKey: "total",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Total Amount
+            {column.getIsSorted() === "desc" ? (
+              <ArrowUp className="ml-2 h-4 w-4" />
+            ) : (
+              <ArrowDown className="ml-2 h-4 w-4" />
+            )}
+          </Button>
+        );
+      },
+      cell: ({ row }) => {
+        return (
+          <div className="flex items-center justify-start gap-1 text-center">
+            <span className="w-full truncate">{row.original?.total}</span>
+          </div>
+        );
+      },
+    },
+    {
+      accessorKey: "paymentMethod",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Payment Method
+            {column.getIsSorted() === "desc" ? (
+              <ArrowUp className="ml-2 h-4 w-4" />
+            ) : (
+              <ArrowDown className="ml-2 h-4 w-4" />
+            )}
+          </Button>
+        );
+      },
+      cell: ({ row }) => {
+        return (
+          <div className="flex items-center justify-center">
+            <span className="w-full truncate text-center">
+              {row.original?.paymentMethod}
+            </span>
+          </div>
+        );
+      },
+    },
+    {
+      accessorKey: "$createdAt",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Date
+            {column.getIsSorted() === "desc" ? (
+              <ArrowUp className="ml-2 h-4 w-4" />
+            ) : (
+              <ArrowDown className="ml-2 h-4 w-4" />
+            )}
+          </Button>
+        );
+      },
+      cell: ({ row }) => {
+        return (
+          <div className="flex items-center justify-start gap-1">
+            <span className="w-full truncate">
+              {format(row.original?.$createdAt, "dd-MM-yyyy")}
+            </span>
           </div>
         );
       },
@@ -167,9 +225,14 @@ const CustomersTableWrapper = ({
       cell: ({ row }) => {
         return (
           <div className="flex items-center justify-center gap-1">
+            <Button asChild size={"sm"}>
+              <Link href={`/invoices/receipt/${row.original.$id}`}>
+                View Receipt
+              </Link>
+            </Button>
             <Button asChild size={"sm"} variant={"outline"}>
-              <Link href={`/Customers/${row.original.$id}`}>Edit</Link>
-            </Button>{" "}
+              <Link href={`/invoices/${row.original.$id}`}>Edit</Link>
+            </Button>
             <Button
               size={"sm"}
               variant={"destructive"}
@@ -186,9 +249,9 @@ const CustomersTableWrapper = ({
   return (
     <div className="flex flex-col gap-3">
       <ConfirmDialog />
-      <CustomersTable data={customers} columns={columns} />
+      <InvoicesTable data={invoices} columns={columns} />
     </div>
   );
 };
 
-export default CustomersTableWrapper;
+export default InvoicesTableWrapper;

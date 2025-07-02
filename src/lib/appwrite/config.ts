@@ -9,6 +9,6 @@ export const appwriteConfig = {
   customersCollectionId:
     process.env.NEXT_PUBLIC_APPWRITE_CUSTOMERS_COLLECTION_ID!,
   invoicesCollectionId:
-    process.env.NEXT_PUBLIC_APPWRITE_CATEGORIES_COLLECTION_ID!,
+    process.env.NEXT_PUBLIC_APPWRITE_INVOICES_COLLECTION_ID!,
   apiSecret: process.env.NEXT_APPWRITE_API_SECRET!,
 };

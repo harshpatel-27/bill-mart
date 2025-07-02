@@ -21,6 +21,12 @@ interface DataState {
   insertCustomer: (value: Models.Document) => void;
   removeCustomer: (id: string) => void;
 
+  // Invoices
+  invoices: Array<Models.Document>;
+  setInvoices: (value: Array<Models.Document>) => void;
+  insertInvoice: (value: Models.Document) => void;
+  removeInvoice: (id: string) => void;
+
   // Hydration
   hydrated: boolean;
   setHydrated: (value: boolean) => void;
@@ -41,12 +47,19 @@ export const useDataStore = create<DataState>()((set, get) => ({
   removeProduct: (id) =>
     set({ products: get()?.products.filter(({ $id }) => $id != id) }),
 
-  // Products
+  // Customers
   customers: [],
   setCustomers: (value) => set({ customers: value }),
   insertCustomer: (value) => set({ customers: [value, ...get()?.customers] }),
   removeCustomer: (id) =>
     set({ customers: get()?.customers.filter(({ $id }) => $id != id) }),
+
+  // Invoices
+  invoices: [],
+  setInvoices: (value) => set({ invoices: value }),
+  insertInvoice: (value) => set({ invoices: [value, ...get()?.invoices] }),
+  removeInvoice: (id) =>
+    set({ invoices: get()?.invoices.filter(({ $id }) => $id != id) }),
 
   // Hydration
   hydrated: false,

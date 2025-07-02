@@ -48,6 +48,19 @@ const CategoryTableWrapper = () => {
 
   const columns: ColumnDef<Category>[] = [
     {
+      accessorKey: "sno.",
+      header: () => {
+        return <Button variant="ghost">Sno.</Button>;
+      },
+      cell: ({ row }) => {
+        return (
+          <div className="flex items-center gap-4 w-full max-w-[100px] justify-center text-center">
+            <span className="w-full truncate ">{row.index + 1}</span>
+          </div>
+        );
+      },
+    },
+    {
       accessorKey: "name",
       header: ({ column }) => {
         return (
@@ -80,15 +93,15 @@ const CategoryTableWrapper = () => {
       cell: ({ row }) => {
         return (
           <div className="flex items-center justify-center gap-1">
+            <Button asChild size={"sm"} variant={"outline"}>
+              <Link href={`/categories/${row.original.$id}`}>Edit</Link>
+            </Button>
             <Button
               size={"sm"}
               variant={"destructive"}
               onClick={() => handleDelete(row.original.$id)}
             >
               <TrashIcon />
-            </Button>
-            <Button asChild size={"sm"} variant={"outline"}>
-              <Link href={`/categories/${row.original.$id}`}>Edit</Link>
             </Button>
           </div>
         );

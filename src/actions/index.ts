@@ -11,6 +11,10 @@ import {
   CreateCustomerSchemaType,
 } from "@/schema/customer.schema";
 import {
+  CreateInvoiceSchema,
+  CreateInvoiceSchemaType,
+} from "@/schema/invoices.schema";
+import {
   CreateProductSchema,
   CreateProductSchemaType,
 } from "@/schema/product.schema";
@@ -98,7 +102,6 @@ export async function getCategories() {
     return { documents: [], total: 0 };
   }
 }
-
 export async function insertCategory(values: CreateCategorySchemaType) {
   const parsedBody = CreateCategorySchema.safeParse(values);
 
@@ -130,7 +133,6 @@ export async function insertCategory(values: CreateCategorySchemaType) {
     };
   }
 }
-
 export async function deleteCategory(id: string) {
   try {
     const { databases } = await createSessionClient();
@@ -185,18 +187,17 @@ export async function insertCustomer(values: CreateCustomerSchemaType) {
     );
     return {
       success: true,
-      message: "Category inserted successfully",
+      message: "Customer inserted successfully",
       data,
     };
   } catch (error: any) {
     return {
       success: false,
-      message: "Failed to insert Category",
+      message: "Failed to insert Customer",
       error: error.message!,
     };
   }
 }
-
 export async function deleteCustomer(id: string) {
   try {
     const { databases } = await createSessionClient();
@@ -209,9 +210,72 @@ export async function deleteCustomer(id: string) {
     return {
       success: true,
       data,
-      message: "Category Deleted successfully",
+      message: "Customer Deleted successfully",
     };
   } catch {
-    return { success: false, message: "Failed to delete category" };
+    return { success: false, message: "Failed to delete Customer" };
+  }
+}
+
+export async function getInvoices() {
+  try {
+    const { databases } = await createSessionClient();
+    const Invoices = await databases.listDocuments(
+      appwriteConfig.databaseId,
+      appwriteConfig.invoicesCollectionId,
+      [Query.orderDesc("$createdAt")],
+    );
+    return Invoices;
+  } catch {
+    return { documents: [], total: 0 };
+  }
+}
+export async function insertInvoice(values: CreateInvoiceSchemaType) {
+  const parsedBody = CreateInvoiceSchema.safeParse(values);
+
+  if (!parsedBody.success) {
+    throw new Error(parsedBody.error.message);
+  }
+  const { name } = parsedBody.data;
+
+  try {
+    const { databases } = await createSessionClient();
+    const data = await databases.createDocument(
+      appwriteConfig.databaseId,
+      appwriteConfig.invoicesCollectionId,
+      ID.unique(),
+      {
+        name,
+      },
+    );
+    return {
+      success: true,
+      message: "Invoice inserted successfully",
+      data,
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      message: "Failed to insert Invoice",
+      error: error.message!,
+    };
+  }
+}
+export async function deleteInvoice(id: string) {
+  try {
+    const { databases } = await createSessionClient();
+    const data = await databases.deleteDocument(
+      appwriteConfig.databaseId,
+      appwriteConfig.invoicesCollectionId,
+      id,
+    );
+
+    return {
+      success: true,
+      data,
+      message: "Invoice Deleted successfully",
+    };
+  } catch {
+    return { success: false, message: "Failed to delete Invoice" };
   }
 }

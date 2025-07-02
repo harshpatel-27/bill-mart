@@ -22,15 +22,15 @@ import {
 import React from "react";
 import { Input } from "@/components/ui/input";
 
-interface ProductTableProps<TData, TValue> {
+interface InvoicesTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
 }
 
-export function CategoryTable<TData, TValue>({
+export function InvoicesTable<TData, TValue>({
   columns,
   data,
-}: ProductTableProps<TData, TValue>) {
+}: InvoicesTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     [],
@@ -57,7 +57,7 @@ export function CategoryTable<TData, TValue>({
     <div className="flex flex-col">
       <div className="flex items-center py-2">
         <Input
-          placeholder="Search Customers..."
+          placeholder="Search Invoices..."
           value={table.getState().globalFilter ?? ""}
           onChange={(event) => {
             table.setGlobalFilter(event.target.value || undefined);
