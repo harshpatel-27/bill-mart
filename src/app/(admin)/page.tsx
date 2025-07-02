@@ -1,5 +1,6 @@
 "use client";
 import { deleteProduct } from "@/actions";
+import { CommonHeader } from "@/components/common-header";
 import {
   Accordion,
   AccordionContent,
@@ -74,23 +75,30 @@ const Page = () => {
 
   return (
     <div className="pb-12">
-      <Button
-        className="w-full max-lg:fixed bottom-0 z-[100] left-0 right-0 text-center max-lg:h-12"
-        asChild
-      >
-        <Link href={"/products/add"}>Add New Product</Link>
-      </Button>
-      <Separator className="max-lg:hidden my-3" />
-      <div className="flex items-center py-2 sticky top-0 bg-background z-[100]">
-        <Input
-          placeholder="Find Stock Detail"
-          value={filter}
-          onChange={(event) => {
-            setFilter(event.target.value);
-          }}
-          className="max-w-sm"
-        />
-      </div>
+      <CommonHeader
+        title="All Products"
+        btnText="Add new Product"
+        href="/products/add"
+      />
+      {products.length > 0 ? (
+        <>
+          <Separator className="max-lg:hidden my-3" />
+          <div className="flex items-center py-2 sticky top-0 bg-background z-[100]">
+            <Input
+              placeholder="Find Stock Detail"
+              value={filter}
+              onChange={(event) => {
+                setFilter(event.target.value);
+              }}
+              className="max-w-sm"
+            />
+          </div>
+        </>
+      ) : (
+        <div className="flex items-center justify-center h-96 text-center flex-wrap">
+          <span>No Products.</span>
+        </div>
+      )}
 
       {filter.length > 0 ? (
         <>
