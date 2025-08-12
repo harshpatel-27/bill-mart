@@ -23,11 +23,11 @@ export const adminNavLinks = [
   //   url: "/customers",
   //   icon: UsersIcon,
   // },
-  // {
-  //   name: "Categories",
-  //   url: "/categories",
-  //   icon: CombineIcon,
-  // },
+  {
+    name: "Categories",
+    url: "/categories",
+    icon: CombineIcon,
+  },
 ];
 
 export const fetchByRoute = {
@@ -35,4 +35,5 @@ export const fetchByRoute = {
   customers: ["customers", "invoices/add", "invoices/edit"],
   invoices: ["invoices"],
 };
+
 
