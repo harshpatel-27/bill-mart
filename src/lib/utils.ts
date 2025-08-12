@@ -1,4 +1,6 @@
+import { logOutCurrentUser } from "@/actions/user";
 import { clsx, type ClassValue } from "clsx";
+import { toast } from "sonner";
 import { twMerge } from "tailwind-merge";
 
 export function cn(...inputs: ClassValue[]) {
@@ -32,4 +34,16 @@ export const checkPathnames = (pathname, paths: string[]): boolean => {
   return paths.some((path) => {
     return pathname.includes(path);
   });
+};
+
+export const logoutUser = async () => {
+  const loggedOut = await logOutCurrentUser();
+  if (loggedOut?.success) {
+    toast.success("You have been logged out successfully.");
+    // Redirect to sign-in page after successful logout
+    window.location.href = "/sign-in";
+  } else {
+    toast.error("Failed to log out. Please try again.");
+    console.error("Logout failed");
+  }
 };
