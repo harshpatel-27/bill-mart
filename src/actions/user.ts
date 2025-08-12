@@ -47,7 +47,10 @@ export async function getAccount() {
 
 export const logOutCurrentUser = async () => {
   try {
-    cookies().delete(SESSION_NAME);
+    const { account } = await createSessionClient();
+    await account.deleteSession("current");
+    await cookies().delete(SESSION_NAME);
+    return { success: true, message: "Logged out successfully" };
   } catch {
     return null;
   }

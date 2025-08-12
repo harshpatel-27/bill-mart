@@ -5,10 +5,14 @@ import { SidebarTrigger } from "../ui/sidebar";
 import { useEffect, useState } from "react";
 import { adminNavLinks } from "@/lib/constants";
 import ThemeToggler from "../ThemeToggler";
+import { Button } from "../ui/button";
+import { LogOutIcon } from "lucide-react";
+import { logoutUser } from "@/lib/utils";
 
 interface AdminHeaderComponentProps {
   initialTheme: "light" | "dark";
 }
+
 const AdminHeader = ({ initialTheme }: AdminHeaderComponentProps) => {
   const pathname = usePathname();
   const [currentPage, setCurrentPage] = useState<
@@ -25,7 +29,17 @@ const AdminHeader = ({ initialTheme }: AdminHeaderComponentProps) => {
       <div className="absolute inset-0 text-lg font-medium flex items-center justify-center truncate">
         {currentPage?.name || "Bill Mart"}
       </div>
-      <ThemeToggler initialTheme={initialTheme} />
+      <div className="flex items-center gap-2">
+        <Button
+          className="z-10"
+          variant={"outline"}
+          size={"icon"}
+          onClick={logoutUser}
+        >
+          <LogOutIcon />
+        </Button>
+        <ThemeToggler initialTheme={initialTheme} />
+      </div>
     </div>
   );
 };
