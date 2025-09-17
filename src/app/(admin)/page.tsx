@@ -50,9 +50,9 @@ export default function Dashboard() {
   const [stats, setStats] = useState<any>({});
   const [loading, setLoading] = useState(true);
   const [pieData, setPieData] = useState([
-    { name: "CASH", value: "cash", color: "#10b981" },
-    { name: "UPI", value: "upi", color: "#f59e0b" },
-    { name: "CARD", value: "card", color: "#ef4444" },
+    { name: "CASH", value: 0, color: "#10b981" },
+    { name: "UPI", value: 0, color: "#f59e0b" },
+    { name: "CARD", value: 0, color: "#ef4444" },
   ]);
   useEffect(() => {
     fetchStatsData();
@@ -62,7 +62,7 @@ export default function Dashboard() {
     const data = await getStats();
     const updatedPieData = pieData.map((item) => ({
       ...item,
-      value: "₹" + data?.paymentMethodStats?.[item.name] || "0",
+      value: data?.paymentMethodStats?.[item.name] || 0,
     }));
     setPieData(updatedPieData);
     setStats(data);
@@ -80,7 +80,7 @@ export default function Dashboard() {
         </div>
 
         {/* Stats Grid */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {statsArr.map((stat, index) => (
             <Card key={index}>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -135,7 +135,7 @@ export default function Dashboard() {
                     outerRadius={100}
                     fill="#8884d8"
                     dataKey="value"
-                    label
+                    label={({ value }) => `₹${value}`}
                   >
                     {pieData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.color} />
