@@ -8,7 +8,7 @@ import {
 export const SITE_NAME = "Bill Mart";
 export const SESSION_NAME = "bill-mart-session";
 export const invoiceReceiptUrlPrefix =
-  "https://bill-mart.vercel.app/invoices/receipt/";
+  "https://bill-mart.vercel.app/invoices/receipt";
 export const adminNavLinks = [
   {
     name: "Dashboard",
