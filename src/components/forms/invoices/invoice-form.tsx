@@ -122,7 +122,18 @@ export const InvoiceForm = ({ type, invoiceId }: InvoiceFormProps) => {
     }
 
     toast.dismiss(loadingToast);
-
+    const msg = `🧾New Invoice Generated\n\n**Total Amount:** ${result?.data?.total}\n\n**Payment Method:** ${result?.data?.paymentMethod}\n\n**Customer Name:** ${result?.data?.customer?.name}\n`;
+    const reply_markup = {
+      inline_keyboard: [
+        [
+          {
+            text: "View Receipt",
+            url: `${invoiceReceiptUrlPrefix}/${result.data.$id}`,
+          },
+        ],
+      ],
+    };
+    await sendTelegramMessage(msg, reply_markup);
     if (result?.success) {
       toast.success(
         type === "create"
@@ -130,26 +141,12 @@ export const InvoiceForm = ({ type, invoiceId }: InvoiceFormProps) => {
           : "Invoice Updated Successfully",
       );
 
-      // Update local store
       if (type === "create" && result.data) {
         addInvoice(result.data);
       } else if (type === "update" && result.data) {
         updateInvoiceState(result.data);
       }
-      console.log({ result });
-      const msg = `🧾New Invoice Generated\n\n**Total Amount:** ${result?.data?.total}\n\n**Payment Method:** ${result?.data?.paymentMethod}\n\n**Customer Name:** ${result?.data?.customer?.name}\n`;
-      const reply_markup = {
-        inline_keyboard: [
-          [
-            {
-              text: "View Receipt",
-              url: `${invoiceReceiptUrlPrefix}/${result.data.$id}`,
-            },
-          ],
-        ],
-      };
-      await sendTelegramMessage(msg, reply_markup);
-      // Update stock locally
+
       const updatedProducts = products.map((product) => {
         const item = values.items.find(
           ({ productId }) => productId === product.$id,
@@ -157,23 +154,30 @@ export const InvoiceForm = ({ type, invoiceId }: InvoiceFormProps) => {
         if (item) {
           const deductedStock = product.stock - parseInt(item.quantity);
           let headingMsg;
+          let isSendMsg = false;
           if (deductedStock == 0) {
             headingMsg = `⚠️ Out of Stock Alert`;
+            isSendMsg = true;
           } else if (deductedStock < 5) {
             headingMsg = `⚠️ Low Stock Alert`;
+            isSendMsg = true;
           }
-          const msg = `${headingMsg}\n\n**Product: ** ${product.name}\n\n**Stock Left: ** ${deductedStock}`;
-          const reply_markup = {
-            inline_keyboard: [
-              [
-                {
-                  text: "Update Stock",
-                  url: `https://bill-mart.vercel.app/products/edit/${product.$id}`,
-                },
+
+          if (isSendMsg) {
+            const msg = `${headingMsg}\n\n**Product: ** ${product.name}\n\n**Stock Left: ** ${deductedStock}`;
+            const reply_markup = {
+              inline_keyboard: [
+                [
+                  {
+                    text: "Update Stock",
+                    url: `https://bill-mart.vercel.app/products/edit/${product.$id}`,
+                  },
+                ],
               ],
-            ],
-          };
-          sendTelegramMessage(msg, reply_markup);
+            };
+            sendTelegramMessage(msg, reply_markup);
+          }
+
           return {
             ...product,
             stock: deductedStock,
