@@ -141,7 +141,7 @@ export default function Dashboard() {
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
                   </Pie>
-                  <Tooltip />
+                  <Tooltip formatter={(value: number) => `₹${value}`} />
                 </PieChart>
               </ResponsiveContainer>
               <div className="flex justify-center gap-4 mt-4">
