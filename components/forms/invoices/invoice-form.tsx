@@ -162,7 +162,7 @@ export const InvoiceForm = ({ type, invoiceId }: InvoiceFormProps) => {
           } else if (deductedStock < 5) {
             headingMsg = `⚠️ Low Stock Alert`;
           }
-          const msg = `${headingMsg}\n\n**Product:** ${product.name}\n**Stock Left:** ${deductedStock}\n**Quantity:** ${item.quantity}\n`;
+          const msg = `${headingMsg}\n\n**Product: ** ${product.name}\n\n**Stock Left: ** ${deductedStock}`;
           const reply_markup = {
             inline_keyboard: [
               [
