@@ -546,7 +546,7 @@ export async function getStats() {
         doc.paymentMethod &&
         paymentMethodStats[doc.paymentMethod] !== undefined
       ) {
-        paymentMethodStats[doc.paymentMethod] += 1;
+        paymentMethodStats[doc.paymentMethod] += doc?.total;
       }
 
       if (doc.items && Array.isArray(doc.items)) {
