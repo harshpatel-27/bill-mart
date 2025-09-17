@@ -1,11 +1,10 @@
 // app/api/telegram/route.ts
+
 import { NextRequest, NextResponse } from "next/server";
 
 const TELEGRAM_SECRET = process.env.TELEGRAM_WEBHOOK_SECRET; // value you set when calling setWebhook
-const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 
 export async function POST(req: NextRequest) {
-  // optional: verify secret header (Telegram will include it if you set secret_token)
   const secret = req.headers.get("x-telegram-bot-api-secret-token");
   if (TELEGRAM_SECRET && secret !== TELEGRAM_SECRET) {
     return new NextResponse("Forbidden", { status: 403 });

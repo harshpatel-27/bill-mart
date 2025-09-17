@@ -7,10 +7,17 @@ import {
 
 export const SITE_NAME = "Bill Mart";
 export const SESSION_NAME = "bill-mart-session";
+export const invoiceReceiptUrlPrefix =
+  "https://bill-mart.vercel.app/invoices/receipt/";
 export const adminNavLinks = [
   {
-    name: "Products",
+    name: "Dashboard",
     url: "/",
+    icon: PackageIcon,
+  },
+  {
+    name: "Products",
+    url: "/products",
     icon: PackageIcon,
   },
   {
@@ -35,6 +42,3 @@ export const fetchByRoute = {
   customers: ["customers", "invoices/add", "invoices/edit"],
   invoices: ["invoices"],
 };
-
-
-

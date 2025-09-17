@@ -8,25 +8,21 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function base64ToImageFile(base64String: string, fileName: string) {
-  // Split the base64 string to get the data type and the actual data
   const [header, data] = base64String.split(",");
   const mimeMatch = header.match(/:(.*?);/);
-  const mimeString = mimeMatch ? mimeMatch[1] : ""; // Extract the mime type
-  const byteString = atob(data); // Decode base64 string
+  const mimeString = mimeMatch ? mimeMatch[1] : "";
+  const byteString = atob(data);
   const ab = new Uint8Array(byteString.length);
 
-  // Create a binary array from the decoded string
   for (let i = 0; i < byteString.length; i++) {
     ab[i] = byteString.charCodeAt(i);
   }
 
-  // Create a Blob from the binary array
   const blob = new Blob([ab], { type: mimeString });
 
-  // Create a File from the Blob
   const imageFile = new File([blob], fileName, { type: blob.type });
 
-  return imageFile; // Return the created File object
+  return imageFile;
 }
 
 export const checkPathnames = (pathname, paths: string[]): boolean => {
@@ -40,10 +36,40 @@ export const logoutUser = async () => {
   const loggedOut = await logOutCurrentUser();
   if (loggedOut?.success) {
     toast.success("You have been logged out successfully.");
-    // Redirect to sign-in page after successful logout
     window.location.href = "/sign-in";
   } else {
     toast.error("Failed to log out. Please try again.");
     console.error("Logout failed");
   }
 };
+
+// lib/telegram.ts
+export async function sendTelegramMessage(
+  text: string,
+  reply_markup: any = {},
+  chatId: number | string = "-1002924181780",
+) {
+  const BOT_TOKEN = process.env.NEXT_PUBLIC_TELEGRAM_BOT_TOKEN;
+  if (!BOT_TOKEN) throw new Error("BOT_TOKEN missing");
+
+  const res = await fetch(
+    `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        chat_id: chatId,
+        text,
+        reply_markup,
+        parse_mode: "MarkdownV2",
+      }),
+    },
+  );
+
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(`Telegram error: ${JSON.stringify(err)}`);
+  }
+
+  return res.json();
+}

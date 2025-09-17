@@ -383,6 +383,7 @@ export async function getInvoices() {
     return { documents: [], total: 0 };
   }
 }
+
 export async function getInvoice(id: string) {
   try {
     const { databases } = await createSessionClient();
@@ -396,6 +397,7 @@ export async function getInvoice(id: string) {
     return { success: false, data: [] };
   }
 }
+
 export async function insertInvoice(values: CreateInvoiceSchemaType) {
   const parsedBody = CreateInvoiceSchema.safeParse(values);
 
@@ -443,6 +445,7 @@ export async function insertInvoice(values: CreateInvoiceSchemaType) {
     };
   }
 }
+
 export async function updateInvoice(
   id: string,
   values: CreateInvoiceSchemaType,
@@ -495,6 +498,7 @@ export async function updateInvoice(
     };
   }
 }
+
 export async function deleteInvoice(id: string) {
   try {
     const { databases } = await createSessionClient();
@@ -511,5 +515,103 @@ export async function deleteInvoice(id: string) {
     };
   } catch {
     return { success: false, message: "Failed to delete Invoice" };
+  }
+}
+
+export async function getStats() {
+  try {
+    const today = new Date();
+    const twelveMonthsAgo = new Date();
+    twelveMonthsAgo.setMonth(today.getMonth() - 11);
+    const { databases } = await createSessionClient();
+
+    const invoices = await databases.listDocuments(
+      appwriteConfig.databaseId,
+      appwriteConfig.invoicesCollectionId,
+      [
+        Query.orderDesc("$createdAt"),
+        Query.select(["customer.name", "items", "total", "paymentMethod"]),
+      ],
+    );
+    let totalQuantitySold = 0;
+    const totalInvoices = invoices.total;
+    const totalRevenue =
+      "₹" + invoices.documents.reduce((acc, doc) => acc + (doc.total || 0), 0);
+    const paymentMethodStats = { CASH: 0, CARD: 0, UPI: 0 };
+    const monthlyStats: Record<string, { total: number; quantity: number }> =
+      {};
+
+    invoices.documents.forEach((doc) => {
+      if (
+        doc.paymentMethod &&
+        paymentMethodStats[doc.paymentMethod] !== undefined
+      ) {
+        paymentMethodStats[doc.paymentMethod] += 1;
+      }
+
+      if (doc.items && Array.isArray(doc.items)) {
+        doc.items.forEach((itemStr: string) => {
+          try {
+            const item = JSON.parse(itemStr);
+            totalQuantitySold += Number(item.quantity) || 0;
+          } catch (e) {
+            console.error("Invalid item JSON:", itemStr);
+          }
+        });
+      }
+
+      const d = new Date(doc.$updatedAt);
+      const monthKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(
+        2,
+        "0",
+      )}`;
+
+      if (!monthlyStats[monthKey]) {
+        monthlyStats[monthKey] = { total: 0, quantity: 0 };
+      }
+
+      monthlyStats[monthKey].total += Number(doc.total) || 0;
+
+      if (doc.items && Array.isArray(doc.items)) {
+        doc.items.forEach((itemStr: string) => {
+          try {
+            const item = JSON.parse(itemStr);
+            monthlyStats[monthKey].quantity += Number(item.quantity) || 0;
+          } catch (e) {
+            console.error("Invalid item JSON:", itemStr);
+          }
+        });
+      }
+    });
+
+    const monthlyRevenueData: {
+      month: string;
+      total: number;
+      quantity: number;
+    }[] = [];
+    for (let i = 11; i >= 0; i--) {
+      const d = new Date();
+      d.setMonth(today.getMonth() - i);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(
+        2,
+        "0",
+      )}`;
+      monthlyRevenueData.push({
+        month: key,
+        total: monthlyStats[key]?.total ?? 0,
+        quantity: monthlyStats[key]?.quantity ?? 0,
+      });
+    }
+
+    return {
+      totalRevenue,
+      totalInvoices,
+      paymentMethodStats,
+      totalQuantitySold,
+      monthlyRevenueData,
+    };
+  } catch (e) {
+    console.log({ error: e });
+    return { error: JSON.stringify(e), documents: [], total: 0 };
   }
 }

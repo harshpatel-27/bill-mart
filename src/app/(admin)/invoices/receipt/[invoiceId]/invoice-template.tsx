@@ -64,8 +64,16 @@ export const InvoiceTemplate = ({ invoiceId }: { invoiceId: string }) => {
               }}
             >
               <td>
+                <img
+                  src="/logo.png"
+                  alt="Bill Mart"
+                  style={{
+                    height: 64,
+                    width: 64,
+                  }}
+                />
                 <h1 style={styles.companyName}>Bill Mart</h1>
-                <p style={styles.receiptText}>RECEIPT</p>
+                {/* <p style={styles.receiptText}>RECEIPT</p> */}
               </td>
               <td>
                 Invoice #: {singleInvoice?.$id}
