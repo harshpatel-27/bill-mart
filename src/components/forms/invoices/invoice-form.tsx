@@ -23,7 +23,8 @@ import { SelectWithSearch } from "@/components/shared/SelectWithSearch";
 import { CustomLoader } from "@/components/loader";
 import { Separator } from "@/components/ui/separator";
 import { Label } from "@/components/ui/label";
-import { cn } from "@/lib/utils";
+import { cn, sendTelegramMessage } from "@/lib/utils";
+import { invoiceReceiptUrlPrefix } from "@/lib/constants";
 
 type InvoiceFormProps = {
   type: "create" | "update";
@@ -75,7 +76,6 @@ export const InvoiceForm = ({ type, invoiceId }: InvoiceFormProps) => {
       form.setValue("customerId", invoice.customer?.$id);
       form.setValue("total", invoice?.total);
       form.setValue("paymentMethod", invoice?.paymentMethod);
-      console.log({ invoice, products, formVal: form.getValues("items") });
     }
   }, [type, invoiceId, invoices, isHydrated]);
 
@@ -136,16 +136,47 @@ export const InvoiceForm = ({ type, invoiceId }: InvoiceFormProps) => {
       } else if (type === "update" && result.data) {
         updateInvoiceState(result.data);
       }
-
+      console.log({ result });
+      const msg = `🧾New Invoice Generated\n\n**Total Amount:** ${result?.data?.total}\n\n**Payment Method:** ${result?.data?.paymentMethod}\n\n**Customer Name:** ${result?.data?.customer?.name}\n`;
+      const reply_markup = {
+        inline_keyboard: [
+          [
+            {
+              text: "View Receipt",
+              url: `${invoiceReceiptUrlPrefix}/${result.data.$id}`,
+            },
+          ],
+        ],
+      };
+      await sendTelegramMessage(msg, reply_markup);
       // Update stock locally
       const updatedProducts = products.map((product) => {
         const item = values.items.find(
           ({ productId }) => productId === product.$id,
         );
         if (item) {
+          const deductedStock = product.stock - parseInt(item.quantity);
+          let headingMsg;
+          if (deductedStock == 0) {
+            headingMsg = `⚠️ Out of Stock Alert`;
+          } else if (deductedStock < 5) {
+            headingMsg = `⚠️ Low Stock Alert`;
+          }
+          const msg = `${headingMsg}\n\n**Product: ** ${product.name}\n\n**Stock Left: ** ${deductedStock}`;
+          const reply_markup = {
+            inline_keyboard: [
+              [
+                {
+                  text: "Update Stock",
+                  url: `https://bill-mart.vercel.app/products/edit/${product.$id}`,
+                },
+              ],
+            ],
+          };
+          sendTelegramMessage(msg, reply_markup);
           return {
             ...product,
-            stock: product.stock - parseInt(item.quantity),
+            stock: deductedStock,
           };
         }
         return product;
@@ -230,10 +261,11 @@ export const InvoiceForm = ({ type, invoiceId }: InvoiceFormProps) => {
                 />
                 <CustomInput
                   type="number"
-                  placeholder="Enter Product Price"
+                  placeholder="Enter Product Pricea "
                   control={form.control}
                   name={`items.${index}.amount`}
                   label="Product Price"
+                  disabled
                 />
                 {index === fields.length - 1 ? (
                   <Button

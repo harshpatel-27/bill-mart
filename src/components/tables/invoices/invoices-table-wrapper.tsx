@@ -17,7 +17,6 @@ export type Invoice = Models.Document;
 
 const InvoicesTableWrapper = () => {
   const isHydrated = useDataStore((state) => state.hydrated);
-  const setInvoices = useDataStore((state) => state.setInvoices);
   const invoices = useDataStore((state) => state.invoices);
   const removeInvoice = useDataStore((state) => state.removeInvoice);
 
@@ -26,6 +25,10 @@ const InvoicesTableWrapper = () => {
     "Are you sure? This invoice will be deleted permanently.",
     "destructive",
   );
+
+  useEffect(() => {
+    console.log({ invoices });
+  }, [invoices]);
 
   const handleDelete = async (id: string) => {
     const ok = await confirm();

@@ -84,7 +84,7 @@ export const ProductForm = ({ type, productId }: ProductFormProps) => {
         updateLocalProduct(result.data);
       }
 
-      router.push("/");
+      router.push("/products");
     } else {
       toast.error(
         type === "create"

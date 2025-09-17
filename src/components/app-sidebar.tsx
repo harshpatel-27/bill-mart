@@ -15,7 +15,7 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar";
 import { adminNavLinks, SITE_NAME } from "@/lib/constants";
-import { AvatarFallback, Avatar } from "./ui/avatar";
+import { AvatarFallback, Avatar, AvatarImage } from "./ui/avatar";
 import { LogOutIcon } from "lucide-react";
 import { logoutUser } from "@/lib/utils";
 
@@ -24,12 +24,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
         <div className="text-xl font-bold text-center flex items-center justify-start gap-3">
-          <Avatar className="h-8 w-8">
-            <AvatarFallback className="rounded-lg uppercase text-sm">
-              {`${SITE_NAME.split(" ")[0][0]}${
-                SITE_NAME?.split(" ")[1][0] ?? ""
-              }`}
-            </AvatarFallback>
+          <Avatar className="h-16 w-16">
+            <AvatarImage src="/logo.png" alt="Bill Mart" />
+            <AvatarFallback className="rounded-lg uppercase text-sm"></AvatarFallback>
           </Avatar>
           <span className="group-data-[collapsible=icon]:hidden truncate">
             {SITE_NAME}
