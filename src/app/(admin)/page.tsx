@@ -62,7 +62,7 @@ export default function Dashboard() {
     const data = await getStats();
     const updatedPieData = pieData.map((item) => ({
       ...item,
-      value: data?.paymentMethodStats?.[item.name] || 0,
+      value: "₹" + data?.paymentMethodStats?.[item.name] || "0",
     }));
     setPieData(updatedPieData);
     setStats(data);
