@@ -1,8 +1,8 @@
-import withPWA from "next-pwa";
-const nextConfig = withPWA({
-  dest: "public",
-  register: true,
-  skipWaiting: true,
-})({});
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  images: {
+    domains: ["fra.cloud.appwrite.io"],
+  },
+};
 
 export default nextConfig;
