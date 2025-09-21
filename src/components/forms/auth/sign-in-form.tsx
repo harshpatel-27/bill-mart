@@ -104,12 +104,6 @@ export function SignInForm() {
                 type="password"
               />
 
-              <div className="text-right -mt-3">
-                <a href="#" className="text-sm text-blue-600 hover:underline">
-                  Forgot password?
-                </a>
-              </div>
-
               <Button
                 type="submit"
                 className="shad-button_primary h-12 rounded-lg text-base font-medium shadow-md hover:shadow-lg transition-all duration-200"

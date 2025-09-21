@@ -11,7 +11,7 @@ import {
   CreateInvoiceSchema,
   CreateInvoiceSchemaType,
 } from "@/schema/invoices.schema";
-import { insertInvoice, updateInvoice } from "@/actions";
+import { insertInvoice, updateInvoice, verifyOtp } from "@/actions";
 import { useDataStore } from "@/stores/data.store";
 
 import { BackBtn } from "@/components/back-btn";
@@ -25,6 +25,7 @@ import { Separator } from "@/components/ui/separator";
 import { Label } from "@/components/ui/label";
 import { cn, sendTelegramMessage } from "@/lib/utils";
 import { invoiceReceiptUrlPrefix } from "@/lib/constants";
+import { sendOtpEmail } from "@/actions";
 
 type InvoiceFormProps = {
   type: "create" | "update";
@@ -40,7 +41,8 @@ export const InvoiceForm = ({ type, invoiceId }: InvoiceFormProps) => {
   const products = useDataStore((state) => state.products);
   const customers = useDataStore((state) => state.customers);
   const isHydrated = useDataStore((state) => state.hydrated);
-
+  const [isOtpVerified, setIsOtpVerified] = useState(false);
+  const [isOtpSent, setIsOtpSent] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<CreateInvoiceSchemaType>({
@@ -199,6 +201,39 @@ export const InvoiceForm = ({ type, invoiceId }: InvoiceFormProps) => {
     setIsLoading(false);
   };
 
+  const handleSendOtp = async () => {
+    const customer = customers.find(
+      ({ $id }) => $id === form.getValues("customerId"),
+    );
+    if (!customer?.email) return toast.error("Customer email not found");
+    const loadingToast = toast.loading("Sending Otp...");
+    setIsLoading(true);
+    try {
+      const res = await sendOtpEmail(customer.email);
+
+      if (res?.success) {
+        toast.success("Otp sent successfully");
+        setIsOtpSent(true);
+        return;
+      }
+      toast.error("Failed to send otp. Please try resending again");
+    } catch (error) {
+      console.log(error);
+      toast.error("Failed to send otp. Please try resending again");
+    } finally {
+      toast.dismiss(loadingToast);
+      setIsLoading(false);
+    }
+  };
+
+  const handleOnverifyOtp = () => {
+    const customer = customers.find(
+      ({ $id }) => $id === form.getValues("customerId"),
+    );
+    if (!customer?.email) return toast.error("Customer email not found");
+    setIsOtpVerified(true);
+  };
+
   if (!isHydrated) return <CustomLoader />;
 
   return (
@@ -320,6 +355,19 @@ export const InvoiceForm = ({ type, invoiceId }: InvoiceFormProps) => {
                 </Button>
               ))}
             </div>
+            {isOtpSent && (
+              <>
+                <Separator />
+                <VerifyOtpForm
+                  email={
+                    customers.find(
+                      ({ $id }) => $id === form.getValues("customerId"),
+                    )?.email || ""
+                  }
+                  onVerify={handleOnverifyOtp}
+                />
+              </>
+            )}
             <div className="flex items-center gap-2">
               <Button
                 type="button"
@@ -329,13 +377,82 @@ export const InvoiceForm = ({ type, invoiceId }: InvoiceFormProps) => {
               >
                 Cancel
               </Button>
-              <Button type="submit" className="w-[100px]" disabled={isLoading}>
-                {type === "create" ? "Create" : "Update"}
-              </Button>
+              {isOtpVerified ? (
+                <Button
+                  type="submit"
+                  className="w-[100px]"
+                  disabled={isLoading}
+                >
+                  {type === "create" ? "Create" : "Update"}
+                </Button>
+              ) : (
+                <Button
+                  type="button"
+                  onClick={handleSendOtp}
+                  disabled={isLoading || !form.getValues("customerId")}
+                >
+                  {isOtpSent ? "Resend Otp" : "Send Otp"}
+                </Button>
+              )}
             </div>
           </form>
         </CardContent>
       </Card>
     </Form>
+  );
+};
+
+const VerifyOtpForm = ({ email, onVerify }) => {
+  const [otp, setOtp] = useState("");
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [isVerified, setisVerified] = useState(false);
+
+  const otpVerify = async () => {
+    setIsVerifying(true);
+
+    try {
+      const isVerified = await verifyOtp(email, otp);
+      if (isVerified?.success) {
+        setIsVerifying(false);
+        setisVerified(true);
+        toast.success("Otp Verified Successfully");
+        onVerify();
+        return;
+      }
+      toast.error(isVerified?.message || "Invalid Otp. Please try again");
+    } catch (error) {
+      console.log(error);
+      toast.error("Failed to verify OTP");
+    } finally {
+      setIsVerifying(false);
+    }
+  };
+  return (
+    <>
+      <Label>OTP Verification</Label>
+      <div>
+        <CustomInput
+          inputOnly
+          placeholder="Enter OTP"
+          onChange={(data) => {
+            console.log(data);
+            setOtp(data);
+          }}
+          name="otp"
+          label="Enter OTP"
+          value={otp}
+          type="number"
+          disabled={isVerifying}
+        />
+        <div className="text-xs text-green-500">
+          {isVerified && "OTP Verified successfully"}
+        </div>
+      </div>
+      {!isVerified && (
+        <Button onClick={otpVerify} disabled={isVerifying}>
+          {isVerifying ? "Verifying..." : "Verify OTP"}
+        </Button>
+      )}
+    </>
   );
 };

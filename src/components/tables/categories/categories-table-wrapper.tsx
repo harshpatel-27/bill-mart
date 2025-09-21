@@ -8,8 +8,10 @@ import Link from "next/link";
 import { useDataStore } from "@/stores/data.store";
 import { useConfirm } from "@/hooks/use-confirm";
 import { toast } from "sonner";
-import { deleteCategory } from "@/actions";
+import { deleteCategory, deleteImage } from "@/actions";
 import { CustomTable } from "..";
+import { convertImgLink } from "@/lib/utils";
+import Image from "next/image";
 
 export type Category = Models.Document;
 
@@ -33,8 +35,9 @@ const CategoryTableWrapper = () => {
 
     try {
       const response = await deleteCategory(id);
-      toast.dismiss(loadingToast);
       if (response.success) {
+        const imageId = categories.find((cat) => cat.$id === id)?.imageId;
+        if (imageId) await deleteImage(imageId);
         removeCategory(id);
         toast.success("Category deleted successfully");
       } else {
@@ -44,6 +47,8 @@ const CategoryTableWrapper = () => {
       console.log(error);
       toast.dismiss(loadingToast);
       toast.error("Failed to delete category");
+    } finally {
+      toast.dismiss(loadingToast);
     }
   };
 
@@ -57,6 +62,31 @@ const CategoryTableWrapper = () => {
         return (
           <div className="flex items-center gap-4 w-full max-w-[100px] justify-center text-center">
             <span className="w-full truncate ">{row.index + 1}</span>
+          </div>
+        );
+      },
+    },
+    {
+      accessorKey: "image",
+      header: () => {
+        return <Button variant="ghost">Image</Button>;
+      },
+      cell: ({ row }) => {
+        return (
+          <div className="flex items-center gap-4 w-max max-w-[300px]">
+            <span className="w-full truncate">
+              <Image
+                src={
+                  row.original.imageId
+                    ? convertImgLink(row.original.imageId)
+                    : "/no-image.jpg"
+                }
+                height={50}
+                width={50}
+                className="rounded-sm"
+                alt={row.original.name}
+              />
+            </span>
           </div>
         );
       },
