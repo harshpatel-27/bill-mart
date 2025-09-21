@@ -2,6 +2,7 @@ import { logOutCurrentUser } from "@/actions/user";
 import { clsx, type ClassValue } from "clsx";
 import { toast } from "sonner";
 import { twMerge } from "tailwind-merge";
+import { appwriteConfig } from "./appwrite/config";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -73,3 +74,16 @@ export async function sendTelegramMessage(
 
   return res.json();
 }
+
+export function generateOTP(length: number = 6) {
+  return Math.floor(100000 + Math.random() * 900000)
+    .toString()
+    .substring(0, length);
+}
+
+export const convertImgLink = (id: string) => {
+  return `${appwriteConfig.url}/storage/buckets/${process.env
+    .NEXT_PUBLIC_APPWRITE_BUCKET_ID!}/files/${id}/view?project=${
+    appwriteConfig.projectId
+  }`;
+};

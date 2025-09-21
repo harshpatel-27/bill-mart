@@ -13,6 +13,8 @@ import {
 } from "@/schema/invoices.schema";
 import { ProductSchema, ProductSchemaType } from "@/schema/product.schema";
 import { ID, Query } from "node-appwrite";
+import nodemailer from "nodemailer";
+import { convertImgLink, generateOTP } from "@/lib/utils";
 
 export async function getProducts() {
   try {
@@ -163,35 +165,47 @@ export async function getCategories() {
     const categories = await databases.listDocuments(
       appwriteConfig.databaseId,
       appwriteConfig.categoriesCollectionId,
-      [Query.orderDesc("name"), Query.select(["name"])],
+      [
+        Query.orderDesc("name"),
+        Query.select(["name"]),
+        Query.select(["imageId"]),
+      ],
     );
     return categories;
   } catch {
     return { documents: [], total: 0 };
   }
 }
-export async function insertCategory(values: CategorySchemaType) {
-  const parsedBody = CategorySchema.safeParse(values);
+export async function insertCategory(formData: FormData) {
+  const name = formData.get("name") as string;
+  const image = formData.get("image") as File | null;
 
-  if (!parsedBody.success) {
-    throw new Error(parsedBody.error.message);
+  if (!name) {
+    throw new Error("Name is required");
   }
-  const { name } = parsedBody.data;
+  let fileId = "";
+  if (image) {
+    const uploadResult = await uploadImage(image);
+    if (!uploadResult.success) {
+      throw new Error("Image upload failed: " + uploadResult.error);
+    }
+    fileId = uploadResult.fileId || "";
+  }
 
   try {
     const { databases } = await createSessionClient();
-    const data = await databases.createDocument(
+    await databases.createDocument(
       appwriteConfig.databaseId,
       appwriteConfig.categoriesCollectionId,
       ID.unique(),
       {
         name,
+        imageId: fileId,
       },
     );
     return {
       success: true,
       message: "Category inserted successfully",
-      data,
     };
   } catch (error: any) {
     return {
@@ -201,17 +215,23 @@ export async function insertCategory(values: CategorySchemaType) {
     };
   }
 }
-export async function updateCategory(
-  categoryId: string,
-  values: CategorySchemaType,
-) {
-  const parsedBody = CategorySchema.safeParse(values);
-
-  if (!parsedBody.success) {
-    throw new Error(parsedBody.error.message);
+export async function updateCategory(categoryId: string, formData: FormData) {
+  const name = formData.get("name") as string;
+  const image = formData.get("image") as File | null;
+  const imageId = formData.get("imageId") as string | null;
+  let newImageId = imageId;
+  if (!name) {
+    throw new Error("Name is required");
   }
 
-  const { name } = parsedBody.data;
+  if (image) {
+    const uploadResult = await uploadImage(image);
+    if (!uploadResult || !uploadResult.success) {
+      throw new Error("Image upload failed: " + uploadResult.error);
+    }
+    if (imageId) await deleteImage(imageId);
+    newImageId = uploadResult.fileId || "";
+  }
 
   try {
     const { databases } = await createSessionClient();
@@ -222,6 +242,7 @@ export async function updateCategory(
       categoryId,
       {
         name,
+        imageId: newImageId,
       },
     );
 
@@ -246,6 +267,8 @@ export async function deleteCategory(id: string) {
       appwriteConfig.categoriesCollectionId,
       id,
     );
+
+    console.log({ data });
 
     return {
       success: true,
@@ -613,5 +636,163 @@ export async function getStats() {
   } catch (e) {
     console.log({ error: e });
     return { error: JSON.stringify(e), documents: [], total: 0 };
+  }
+}
+
+export async function sendOtpEmail(email: string) {
+  try {
+    const { databases } = await createSessionClient();
+    const otp = generateOTP(6);
+    const expiresAt = new Date(Date.now() + 5 * 60 * 1000).toISOString();
+    const data = await databases.createDocument(
+      appwriteConfig.databaseId,
+      appwriteConfig.otpCollectionId,
+      ID.unique(),
+      {
+        email,
+        otp,
+        expiresAt,
+      },
+    );
+    if (!data) return { success: false, error: "Failed to send OTP" };
+
+    const htmlTemplate = `
+  <table width="100%" cellpadding="0" cellspacing="0" role="presentation">
+    <tr>
+      <td align="center" style="padding:24px;">
+        <table width="600" cellpadding="0" cellspacing="0" role="presentation" style="background:#ffffff;border-radius:8px;overflow:hidden;box-shadow:0 6px 18px rgba(15,23,42,0.06);">
+          <tr>
+            <td style="padding:28px 32px 16px 32px;text-align:left;">
+              <h1 style="margin:0;font-size:20px;color:#0f172a;">Your verification code</h1>
+              <p style="margin:8px 0 0 0;color:#475569;font-size:14px;line-height:1.4;">
+                Use the one-time password (OTP) below to complete your action.
+              </p>
+            </td>
+          </tr>
+
+          <tr>
+            <td align="center" style="padding:12px 32px 20px 32px;">
+              <div style="display:inline-block;background:#f8fafc;border:1px solid #e6eef8;border-radius:8px;padding:18px 22px;">
+                <p style="margin:0;text-align:center;font-size:28px;letter-spacing:3px;font-weight:700;color:#0b1220;font-family:monospace;">
+                  ${otp}
+                </p>
+              </div>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding:0 32px 20px 32px;text-align:left;">
+              <p style="margin:0;color:#334155;font-size:14px;line-height:1.4;">
+                This code will <strong>expire in 5 minutes</strong>. If you did not request this, please ignore this email.
+              </p>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding:18px 32px 28px 32px;text-align:left;border-top:1px solid #eef2f7;">
+              <p style="margin:0;color:#94a3b8;font-size:12px;">
+                This email is intended for the recipient only. For security, do not share your OTP.
+              </p>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding:12px 32px 34px 32px;text-align:center;font-size:12px;color:#94a3b8;">
+              © BillMart, All rights reserved.
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+  `;
+
+    // const isSentOtp = await resend.emails.send({
+    //   from: "BillMart <onboarding@resend.dev>",
+    //   to: email,
+    //   subject: `${otp} is your BillMart invoice otp`,
+    //   html: htmlTemplate,
+    // });
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.GMAIL_USER, // Gmail address
+        pass: process.env.GMAIL_PASS, // App password
+      },
+    });
+
+    const isSentOtp = await transporter.sendMail({
+      from: `"BillMart" <${process.env.GMAIL_USER}>`,
+      to: email,
+      subject: `${otp} is your BillMart invoice otp`,
+      html: htmlTemplate,
+    });
+    if (!isSentOtp) return { success: false, error: "Failed to send OTP" };
+    console.log({ isSentOtp });
+    return { success: true };
+  } catch (error) {
+    console.error("Error sending OTP:", error);
+    return { success: false, error: "Failed to send OTP" };
+  }
+}
+
+export async function verifyOtp(email: string, userOtp: string) {
+  try {
+    const { databases } = await createSessionClient();
+    const result = await databases.listDocuments(
+      appwriteConfig.databaseId,
+      appwriteConfig.otpCollectionId,
+      [
+        Query.equal("email", email),
+        Query.equal("otp", userOtp),
+        Query.orderDesc("$createdAt"),
+        Query.limit(1),
+      ],
+    );
+
+    if (result.total === 0) {
+      return { success: false, message: "Invalid OTP" };
+    }
+
+    const otpDoc = result.documents[0];
+    const now = new Date();
+
+    if (new Date(otpDoc.expiresAt) < now) {
+      return { success: false, message: "OTP expired" };
+    }
+
+    return { success: true, message: "OTP verified successfully" };
+  } catch (error) {
+    console.error("Error verifying OTP:", error);
+    return { success: false, message: "Failed to verify OTP" };
+  }
+}
+
+export async function uploadImage(file: File) {
+  try {
+    const { storage } = await createSessionClient();
+    const uploaded = await storage.createFile(
+      process.env.NEXT_PUBLIC_APPWRITE_BUCKET_ID!,
+      "unique()",
+      file,
+    );
+    const fileUrl = convertImgLink(uploaded.$id);
+
+    return { success: true, url: fileUrl, fileId: uploaded.$id };
+  } catch (error: any) {
+    console.error("Upload failed:", error.message);
+    return { success: false, error: error.message };
+  }
+}
+
+export async function deleteImage(id: string) {
+  try {
+    const { storage } = await createSessionClient();
+    await storage.deleteFile(process.env.NEXT_PUBLIC_APPWRITE_BUCKET_ID!, id);
+
+    return { success: true };
+  } catch (error: any) {
+    console.error("Delete failed:", error.message);
+    return { success: false, error: error.message };
   }
 }
